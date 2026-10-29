@@ -61,8 +61,53 @@ function glb(){
     new T.GLTFExporter().parse(sc, r => ok(r), { binary:true, animations:[clip] });
   });
 }
+// Animated USDZ (usda inside) for iPhone Quick Look — electrons spin around the nucleus
+function atomUSDZ(sh){
+  const f = x => (Math.round(x * 10000) / 10000).toString();
+  const sphere = (cx, cy, cz, r, seg, rings) => { const P = [], I = [], C = [];
+    for (let i = 0; i <= rings; i++){ const th = Math.PI * i / rings; for (let j = 0; j < seg; j++){ const ph = 2 * Math.PI * j / seg; P.push([cx + r * Math.sin(th) * Math.cos(ph), cy + r * Math.cos(th), cz + r * Math.sin(th) * Math.sin(ph)]); } }
+    for (let i = 0; i < rings; i++) for (let j = 0; j < seg; j++){ const a = i * seg + j, b = i * seg + (j + 1) % seg, c = (i + 1) * seg + (j + 1) % seg, d = (i + 1) * seg + j; I.push(a, b, c, d); C.push(4); }
+    return { P, I, C }; };
+  const torus = (R, r, seg, tube) => { const P = [], I = [], C = [];
+    for (let i = 0; i < seg; i++){ const u = 2 * Math.PI * i / seg; for (let j = 0; j < tube; j++){ const v = 2 * Math.PI * j / tube; P.push([(R + r * Math.cos(v)) * Math.cos(u), r * Math.sin(v), (R + r * Math.cos(v)) * Math.sin(u)]); } }
+    for (let i = 0; i < seg; i++) for (let j = 0; j < tube; j++){ const a = i * tube + j, b = ((i + 1) % seg) * tube + j, c = ((i + 1) % seg) * tube + (j + 1) % tube, d = i * tube + (j + 1) % tube; I.push(a, b, c, d); C.push(4); }
+    return { P, I, C }; };
+  const merge = parts => { const P = [], I = [], C = []; parts.forEach(p => { const o = P.length; P.push(...p.P); p.I.forEach(x => I.push(x + o)); C.push(...p.C); }); return { P, I, C }; };
+  const mesh = (name, g, mat, ind) => `${ind}def Mesh "${name}"\n${ind}{\n${ind}  int[] faceVertexCounts = [${g.C.join(',')}]\n${ind}  int[] faceVertexIndices = [${g.I.join(',')}]\n${ind}  point3f[] points = [${g.P.map(p => `(${f(p[0])},${f(p[1])},${f(p[2])})`).join(',')}]\n${ind}  uniform token subdivisionScheme = "none"\n${ind}  rel material:binding = </Atom/Looks/${mat}>\n${ind}}\n`;
+  const mtl = (name, rgb, rough, em) => `    def Material "${name}"\n    {\n      token outputs:surface.connect = </Atom/Looks/${name}/S.outputs:surface>\n      def Shader "S"\n      {\n        uniform token info:id = "UsdPreviewSurface"\n        color3f inputs:diffuseColor = (${rgb.join(',')})\n        float inputs:roughness = ${rough}\n        float inputs:metallic = 0\n${em ? `        color3f inputs:emissiveColor = (${em.join(',')})\n` : ''}        token outputs:surface\n      }\n    }\n`;
+  const FPS = 24, FR = 8 * FPS, n = sh.length;
+  let shells = '';
+  sh.forEach((cnt, i) => {
+    const rad = 0.75 + i * 0.42, laps = Math.max(1, n - i), steps = laps * 8;
+    const ts = []; for (let k = 0; k <= steps; k++) ts.push(`${f(k * FR / steps)}: ${f(-360 * laps * k / steps)}`);
+    const el = merge(Array.from({ length:cnt }, (_, k) => sphere(rad * Math.cos(2 * Math.PI * k / cnt), 0, rad * Math.sin(2 * Math.PI * k / cnt), 0.085, 8, 6)));
+    shells += `  def Xform "Shell${i}"\n  {\n    float xformOp:rotateX = ${(i % 2 ? 1 : -1) * 7 * Math.min(i, 3)}\n    uniform token[] xformOpOrder = ["xformOp:rotateX"]\n${mesh('Ring', torus(rad, 0.03, 64, 6), 'Ring', '    ')}    def Xform "Spin"\n    {\n      float xformOp:rotateY.timeSamples = {${ts.join(', ')}}\n      uniform token[] xformOpOrder = ["xformOp:rotateY"]\n${mesh('Electrons', el, 'Electron', '      ')}    }\n  }\n`;
+  });
+  const usda = `#usda 1.0\n(\n  defaultPrim = "Atom"\n  metersPerUnit = 1\n  upAxis = "Y"\n  startTimeCode = 0\n  endTimeCode = ${FR}\n  timeCodesPerSecond = ${FPS}\n  framesPerSecond = ${FPS}\n)\n\ndef Xform "Atom" (\n  kind = "component"\n)\n{\n  float3 xformOp:scale = (0.14, 0.14, 0.14)\n  double3 xformOp:translate = (0, 0.8, 0)\n  uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]\n  def Scope "Looks"\n  {\n${mtl('Nucleus', [0.91, 0.44, 0.36], 0.4)}${mtl('Electron', [0.17, 0.42, 0.94], 0.3, [0.05, 0.12, 0.35])}${mtl('Ring', [0.61, 0.56, 0.82], 0.5)}  }\n${mesh('Nucleus', sphere(0, 0, 0, 0.28, 16, 10), 'Nucleus', '  ')}${shells}}\n`;
+  return zipStore('model.usda', new TextEncoder().encode(usda));
+}
+// minimal ZIP (stored, data aligned to 64 bytes as USDZ requires)
+function zipStore(name, data){
+  const crcT = zipStore.t || (zipStore.t = Array.from({ length:256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; }));
+  let crc = 0xFFFFFFFF; for (const b of data) crc = crcT[(crc ^ b) & 0xFF] ^ (crc >>> 8); crc = (crc ^ 0xFFFFFFFF) >>> 0;
+  const nm = new TextEncoder().encode(name);
+  const pad = (64 - ((30 + nm.length + 4) % 64)) % 64, extra = 4 + pad;
+  const lh = new DataView(new ArrayBuffer(30 + nm.length + extra));
+  lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0, true); lh.setUint16(8, 0, true); lh.setUint16(10, 0, true); lh.setUint16(12, 0x21, true);
+  lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nm.length, true); lh.setUint16(28, extra, true);
+  new Uint8Array(lh.buffer).set(nm, 30); lh.setUint16(30 + nm.length, 0x1986, true); lh.setUint16(32 + nm.length, pad, true);
+  const cd = new DataView(new ArrayBuffer(46 + nm.length));
+  cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(8, 0, true); cd.setUint16(10, 0, true); cd.setUint16(12, 0, true); cd.setUint16(14, 0x21, true);
+  cd.setUint32(16, crc, true); cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true); cd.setUint16(28, nm.length, true); cd.setUint16(30, 0, true); cd.setUint16(32, 0, true); cd.setUint16(34, 0, true); cd.setUint16(36, 0, true); cd.setUint32(38, 0, true); cd.setUint32(42, 0, true);
+  new Uint8Array(cd.buffer).set(nm, 46);
+  const cdOff = lh.byteLength + data.length;
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, 1, true); end.setUint16(10, 1, true); end.setUint32(12, cd.byteLength, true); end.setUint32(16, cdOff, true);
+  return new Blob([lh.buffer, data, cd.buffer, end.buffer], { type:'model/vnd.usdz+zip' });
+}
 (async () => {
   await customElements.whenDefined('model-viewer');
+  try { mv.setAttribute('ios-src', URL.createObjectURL(atomUSDZ(e.sh))); } catch (er) {}
   const g = await glb();
   mv.src = URL.createObjectURL(new Blob([g], { type:'model/gltf-binary' }));
   mv.addEventListener('load', async () => {
