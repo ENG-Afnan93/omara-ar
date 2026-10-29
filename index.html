@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ذرّتي في مكاني · By Afnan</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<style>
+:root{--ink:#2A2346;--ac:#E8705C}
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;color:var(--ink);background:#F7F6FB}
+header{position:fixed;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:rgba(255,255,255,.92);border-bottom:1.5px solid #E8E4EF}
+.el{display:flex;align-items:center;gap:10px}
+.box{direction:ltr;width:54px;height:58px;border:2.5px solid var(--ink);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;line-height:1}
+.box small{font-size:11px;color:#6B6585}.box b{font-size:24px}
+h1{font-size:19px;margin:0}.sh{font-size:13px;color:#6B6585}
+select{font:inherit;padding:6px 8px;border-radius:10px;border:1.5px solid #E8E4EF;background:#fff}
+model-viewer{position:fixed;inset:0;width:100%;height:100%;background:#F7F6FB}
+.tap{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:var(--ac);color:#fff;border:0;border-radius:18px;padding:14px 22px;font-size:19px;font-weight:700;white-space:nowrap;box-shadow:0 6px 16px rgba(232,112,92,.45)}
+.tap .h{font-size:28px;animation:t 1.2s ease-in-out infinite}@keyframes t{50%{transform:translateY(-6px) scale(1.1)}}
+#note{position:fixed;bottom:100px;left:12px;right:12px;text-align:center;font-size:14px;color:#6B6585;z-index:2}
+footer{position:fixed;bottom:6px;left:0;right:0;text-align:center;font-size:12px;color:#9A94AE;z-index:2}
+</style></head>
+<body>
+<header><div class="el"><div class="box"><small id="z"></small><b id="s"></b></div><div><h1 id="n"></h1><div class="sh" id="shl"></div></div></div><select id="pick" aria-label="اختاري عنصر"></select></header>
+<model-viewer id="mv" dir="ltr" loading="eager" ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto" camera-controls autoplay shadow-intensity="1" camera-orbit="0deg 65deg auto">
+<button slot="ar-button" class="tap"><span class="h">👆</span><span>اضغطي هني وتطلع الذرّة قدامج</span></button></model-viewer>
+<div id="note">جاري تجهيز الذرّة… ⏳</div>
+<footer>نموذج بور تبسيطي · By Afnan</footer>
+<script>
+const D = "H|الهيدروجين|1,He|الهيليوم|2,Li|الليثيوم|2.1,Be|البريليوم|2.2,B|البورون|2.3,C|الكربون|2.4,N|النيتروجين|2.5,O|الأكسجين|2.6,F|الفلور|2.7,Ne|النيون|2.8,Na|الصوديوم|2.8.1,Mg|المغنيسيوم|2.8.2,Al|الألومنيوم|2.8.3,Si|السيليكون|2.8.4,P|الفوسفور|2.8.5,S|الكبريت|2.8.6,Cl|الكلور|2.8.7,Ar|الأرجون|2.8.8,K|البوتاسيوم|2.8.8.1,Ca|الكالسيوم|2.8.8.2,Sc|السكانديوم|2.8.9.2,Ti|التيتانيوم|2.8.10.2,V|الفاناديوم|2.8.11.2,Cr|الكروم|2.8.13.1,Mn|المنجنيز|2.8.13.2,Fe|الحديد|2.8.14.2,Co|الكوبلت|2.8.15.2,Ni|النيكل|2.8.16.2,Cu|النحاس|2.8.18.1,Zn|الخارصين|2.8.18.2,Ga|الجاليوم|2.8.18.3,Ge|الجرمانيوم|2.8.18.4,As|الزرنيخ|2.8.18.5,Se|السيلينيوم|2.8.18.6,Br|البروم|2.8.18.7,Kr|الكريبتون|2.8.18.8,Rb|الروبيديوم|2.8.18.8.1,Sr|السترانشيوم|2.8.18.8.2,Y|الإتريوم|2.8.18.9.2,Zr|الزركونيوم|2.8.18.10.2,Nb|النيوبيوم|2.8.18.12.1,Mo|الموليبدنوم|2.8.18.13.1,Tc|التكنيشيوم|2.8.18.13.2,Ru|الروثينيوم|2.8.18.15.1,Rh|الروديوم|2.8.18.16.1,Pd|البلاديوم|2.8.18.18,Ag|الفضة|2.8.18.18.1,Cd|الكادميوم|2.8.18.18.2,In|الإنديوم|2.8.18.18.3,Sn|القصدير|2.8.18.18.4,Sb|الأنتيمون|2.8.18.18.5,Te|التيلوريوم|2.8.18.18.6,I|اليود|2.8.18.18.7,Xe|الزينون|2.8.18.18.8,Cs|السيزيوم|2.8.18.18.8.1,Ba|الباريوم|2.8.18.18.8.2,La|اللانثانوم|2.8.18.18.9.2,Ce|السيريوم|2.8.18.19.9.2,Pr|البراسيوديميوم|2.8.18.21.8.2,Nd|النيوديميوم|2.8.18.22.8.2,Pm|البروميثيوم|2.8.18.23.8.2,Sm|الساماريوم|2.8.18.24.8.2,Eu|اليوروبيوم|2.8.18.25.8.2,Gd|الجادولينيوم|2.8.18.25.9.2,Tb|التيربيوم|2.8.18.27.8.2,Dy|الديسبروسيوم|2.8.18.28.8.2,Ho|الهولميوم|2.8.18.29.8.2,Er|الإربيوم|2.8.18.30.8.2,Tm|الثوليوم|2.8.18.31.8.2,Yb|الإيتربيوم|2.8.18.32.8.2,Lu|اللوتيتيوم|2.8.18.32.9.2,Hf|الهافنيوم|2.8.18.32.10.2,Ta|التنتالوم|2.8.18.32.11.2,W|التنجستن|2.8.18.32.12.2,Re|الرينيوم|2.8.18.32.13.2,Os|الأوزميوم|2.8.18.32.14.2,Ir|الإيريديوم|2.8.18.32.15.2,Pt|البلاتين|2.8.18.32.17.1,Au|الذهب|2.8.18.32.18.1,Hg|الزئبق|2.8.18.32.18.2,Tl|الثاليوم|2.8.18.32.18.3,Pb|الرصاص|2.8.18.32.18.4,Bi|البزموت|2.8.18.32.18.5,Po|البولونيوم|2.8.18.32.18.6,At|الأستاتين|2.8.18.32.18.7,Rn|الرادون|2.8.18.32.18.8,Fr|الفرانسيوم|2.8.18.32.18.8.1,Ra|الراديوم|2.8.18.32.18.8.2,Ac|الأكتينيوم|2.8.18.32.18.9.2,Th|الثوريوم|2.8.18.32.18.10.2,Pa|البروتكتينيوم|2.8.18.32.20.9.2,U|اليورانيوم|2.8.18.32.21.9.2,Np|النبتونيوم|2.8.18.32.22.9.2,Pu|البلوتونيوم|2.8.18.32.24.8.2,Am|الأمريسيوم|2.8.18.32.25.8.2,Cm|الكوريوم|2.8.18.32.25.9.2,Bk|البركليوم|2.8.18.32.27.8.2,Cf|الكاليفورنيوم|2.8.18.32.28.8.2,Es|الأينشتاينيوم|2.8.18.32.29.8.2,Fm|الفيرميوم|2.8.18.32.30.8.2,Md|المندليفيوم|2.8.18.32.31.8.2,No|النوبليوم|2.8.18.32.32.8.2,Lr|اللورنسيوم|2.8.18.32.32.8.3,Rf|الرذرفورديوم|2.8.18.32.32.10.2,Db|الدوبنيوم|2.8.18.32.32.11.2,Sg|السيبورجيوم|2.8.18.32.32.12.2,Bh|البوريوم|2.8.18.32.32.13.2,Hs|الهاسيوم|2.8.18.32.32.14.2,Mt|المايتنريوم|2.8.18.32.32.15.2,Ds|الدارمشتاتيوم|2.8.18.32.32.17.1,Rg|الرونتجينيوم|2.8.18.32.32.18.1,Cn|الكوبرنيسيوم|2.8.18.32.32.18.2,Nh|النيهونيوم|2.8.18.32.32.18.3,Fl|الفليروفيوم|2.8.18.32.32.18.4,Mc|الموسكوفيوم|2.8.18.32.32.18.5,Lv|الليفرموريوم|2.8.18.32.32.18.6,Ts|التينيسين|2.8.18.32.32.18.7,Og|الأوغانيسون|2.8.18.32.32.18.8".split(',').map((r, i) => { const [s, ar, sh] = r.split('|'); return { z:i + 1, s, ar, sh:sh.split('.').map(Number) }; });
+const q = new URLSearchParams(location.search), Z = Math.min(118, Math.max(1, +(q.get('z') || location.hash.slice(1)) || 11)), e = D[Z - 1];
+document.title = e.ar + ' · ذرّتي في مكاني';
+z.textContent = e.z; s.textContent = e.s; n.textContent = e.ar; shl.textContent = 'المستويات: ' + e.sh.join('، ');
+pick.innerHTML = D.slice(0, 21).map(x => `<option value="${x.z}" ${x.z === Z ? 'selected' : ''}>${x.z}. ${x.ar} ${x.s}</option>`).join('') + (Z > 21 ? `<option selected>${e.z}. ${e.ar} ${e.s}</option>` : '');
+pick.onchange = () => { location.search = '?z=' + pick.value; };
+function scene(){
+  const T = THREE, sc = new T.Scene(), root = new T.Group(); sc.add(root);
+  root.add(new T.Mesh(new T.SphereGeometry(0.28, 32, 24), new T.MeshStandardMaterial({ color:0xE8705C, roughness:.4 })));
+  const em = new T.MeshStandardMaterial({ color:0x2B6CEF, emissive:0x1A3FA0, emissiveIntensity:.35, roughness:.3 });
+  const rm = new T.MeshBasicMaterial({ color:0xB9B2CC });
+  const eg = new T.SphereGeometry(0.085, 16, 12), shells = [];
+  e.sh.forEach((cnt, i) => {
+    const rad = 0.75 + i * 0.42, g = new T.Group();
+    g.rotation.x = Math.PI / 2; g.rotation.y = (i % 2 ? 1 : -1) * 0.12 * Math.min(i, 3);
+    g.add(new T.Mesh(new T.TorusGeometry(rad, 0.01, 6, 128), rm));
+    const spin = new T.Group(); spin.name = 'shell' + i; g.add(spin);
+    for (let k = 0; k < cnt; k++){ const a = k / cnt * Math.PI * 2, m = new T.Mesh(eg, em); m.position.set(Math.cos(a) * rad, Math.sin(a) * rad, 0); spin.add(m); }
+    root.add(g); shells.push({ spin, speed:0.6 / (1 + i * 0.35) });
+  });
+  sc.add(new T.AmbientLight(0xffffff, .75)); const dl = new T.DirectionalLight(0xffffff, .7); dl.position.set(3, 4, 5); sc.add(dl);
+  return { sc, shells };
+}
+function glb(){
+  return new Promise(ok => {
+    const T = THREE, { sc, shells } = scene();
+    const dur = Math.max(...shells.map(s => 2 * Math.PI / s.speed));
+    const tracks = shells.map(s => { const per = 2 * Math.PI / s.speed, laps = Math.max(1, Math.round(dur / per)), steps = laps * 4, D = laps * per, t = [], v = [];
+      for (let k = 0; k <= steps; k++){ const qq = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 0, 1), k / 4 * Math.PI * 2); t.push(k / steps * D); v.push(qq.x, qq.y, qq.z, qq.w); }
+      return new T.QuaternionKeyframeTrack(s.spin.name + '.quaternion', t, v); });
+    const clip = new T.AnimationClip('spin', Math.max(...tracks.map(t => t.times[t.times.length - 1])), tracks);
+    sc.scale.setScalar(0.12);
+    new T.GLTFExporter().parse(sc, r => ok(r), { binary:true, animations:[clip] });
+  });
+}
+(async () => {
+  await customElements.whenDefined('model-viewer');
+  const g = await glb();
+  mv.src = URL.createObjectURL(new Blob([g], { type:'model/gltf-binary' }));
+  mv.addEventListener('load', async () => {
+    note.textContent = (await mv.canActivateAR) ? 'وجّهي الكاميرا على طاولة أو أرضية بعد ما تضغطين 📱' : 'هالجهاز أو المتصفح ما يدعم الواقع المعزز. افتحي الرابط من تلفون: آيفون (Safari) أو أندرويد (Chrome). وتقدرين تدوّرين الذرّة بإصبعج.';
+  });
+  mv.addEventListener('ar-status', ev => { if (ev.detail.status === 'failed') note.textContent = 'ما اشتغل الواقع المعزز. جربي مكان فيه إضاءة زينة وسطح واضح.'; });
+})();
+</script></body></html>
