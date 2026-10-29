@@ -36,12 +36,12 @@ function scene(){
   const T = THREE, sc = new T.Scene(), root = new T.Group(); sc.add(root);
   root.add(new T.Mesh(new T.SphereGeometry(0.28, 32, 24), new T.MeshStandardMaterial({ color:0xE8705C, roughness:.4 })));
   const em = new T.MeshStandardMaterial({ color:0x2B6CEF, emissive:0x1A3FA0, emissiveIntensity:.35, roughness:.3 });
-  const rm = new T.MeshBasicMaterial({ color:0xB9B2CC });
+  const rm = new T.MeshStandardMaterial({ color:0x9C8FD0, roughness:.5 });
   const eg = new T.SphereGeometry(0.085, 16, 12), shells = [];
   e.sh.forEach((cnt, i) => {
     const rad = 0.75 + i * 0.42, g = new T.Group();
     g.rotation.x = Math.PI / 2; g.rotation.y = (i % 2 ? 1 : -1) * 0.12 * Math.min(i, 3);
-    g.add(new T.Mesh(new T.TorusGeometry(rad, 0.01, 6, 128), rm));
+    g.add(new T.Mesh(new T.TorusGeometry(rad, 0.03, 10, 128), rm));
     const spin = new T.Group(); spin.name = 'shell' + i; g.add(spin);
     for (let k = 0; k < cnt; k++){ const a = k / cnt * Math.PI * 2, m = new T.Mesh(eg, em); m.position.set(Math.cos(a) * rad, Math.sin(a) * rad, 0); spin.add(m); }
     root.add(g); shells.push({ spin, speed:0.6 / (1 + i * 0.35) });
@@ -57,7 +57,7 @@ function glb(){
       for (let k = 0; k <= steps; k++){ const qq = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 0, 1), k / 4 * Math.PI * 2); t.push(k / steps * D); v.push(qq.x, qq.y, qq.z, qq.w); }
       return new T.QuaternionKeyframeTrack(s.spin.name + '.quaternion', t, v); });
     const clip = new T.AnimationClip('spin', Math.max(...tracks.map(t => t.times[t.times.length - 1])), tracks);
-    sc.scale.setScalar(0.12);
+    sc.scale.setScalar(0.14);
     new T.GLTFExporter().parse(sc, r => ok(r), { binary:true, animations:[clip] });
   });
 }
